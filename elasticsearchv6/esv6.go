@@ -2,7 +2,6 @@ package elasticsearchv6
 
 import (
 	"github.com/elastic/go-elasticsearch/v6"
-	"log"
 	"strings"
 )
 
@@ -30,7 +29,7 @@ func (es *ESv6) NewClient() {
 	es.Client = client
 }
 
-func (es *ESv6) Search(index, queryDSL string) string {
+func (es *ESv6) Search(index, queryDSL string) (string, error) {
 	resp, err := es.Client.Search(
 		es.Client.Search.WithIndex(index),
 		es.Client.Search.WithPretty(),
@@ -38,10 +37,9 @@ func (es *ESv6) Search(index, queryDSL string) string {
 	)
 
 	if err != nil {
-		log.Println(err)
-		return err.Error()
+		return err.Error(), err
 	}
 
 	result := strings.Trim(resp.String(), "[200 OK] ")
-	return result
+	return result, nil
 }
