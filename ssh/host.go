@@ -87,23 +87,23 @@ func (h *Host) Put(local, remote string) int64 {
 	}
 	filename := path.Base(local)
 	remotePath := path.Join(remote, filename)
-	remoteFile, err := h.SFTPClient.Create(path.Join(remotePath))
+	remoteFile, err := h.SFTPClient.Create(remotePath)
 	if err != nil {
-		panic(fmt.Sprintf("[%s]: Create remote file %s: %s", h.Hostname, remote, err))
+		panic(fmt.Sprintf("[%s]: Create remote file %s: %s", h.Hostname, remotePath, err))
 	}
 	size, err := io.Copy(remoteFile, localFile)
 	if err != nil {
-		panic(fmt.Sprintf("[%s]: Upload file to %s: %s", h.Hostname, remote, err))
+		panic(fmt.Sprintf("[%s]: Upload file to %s: %s", h.Hostname, remotePath, err))
 	}
 	return size
 }
 
 func (h *Host) Get(local, remote string) int64 {
 	filename := path.Base(remote)
-	localFath := path.Join(local, filename)
-	localFile, err := os.Create(localFath)
+	localPath := path.Join(local, filename)
+	localFile, err := os.Create(localPath)
 	if err != nil {
-		panic(fmt.Sprintf("Create local file %s: %s", local, err))
+		panic(fmt.Sprintf("Create local file %s: %s", localPath, err))
 	}
 	remoteFile, err := h.SFTPClient.Open(remote)
 	if err != nil {
@@ -111,7 +111,7 @@ func (h *Host) Get(local, remote string) int64 {
 	}
 	size, err := io.Copy(localFile, remoteFile)
 	if err != nil {
-		panic(fmt.Sprintf("[%s]: Download file to %s: %s", h.Hostname, remote, err))
+		panic(fmt.Sprintf("[%s]: Download file to %s: %s", h.Hostname, localPath, err))
 	}
 	return size
 }
