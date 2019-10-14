@@ -1,8 +1,9 @@
 package elasticsearchv6
 
 import (
-	"github.com/elastic/go-elasticsearch/v6"
 	"strings"
+
+	"github.com/elastic/go-elasticsearch/v6"
 )
 
 type ESv6 struct {
