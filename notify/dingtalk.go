@@ -13,8 +13,13 @@ import (
 	"time"
 )
 
-func SendDingTalk(title, message, robotUrl string, proxyUrl *url.URL) (string, error) {
+func SendDingTalk(title, message, robotUrl string, markdown bool, proxyUrl *url.URL) (string, error) {
 	requestBody := fmt.Sprintf(`{"msgtype": "text","text": {"content": "%s\n\n%s"}}`, title, message)
+	if markdown {
+		requestBody = fmt.Sprintf(
+			`{"msgtype": "markdown","markdown": {"title": "%s"", "text": "### %s\n\n%s"}}`, title, title, message,
+		)
+	}
 	jsonStr := []byte(requestBody)
 
 	req, _ := http.NewRequest("POST", robotUrl, bytes.NewBuffer(jsonStr))
@@ -39,7 +44,7 @@ func SendDingTalk(title, message, robotUrl string, proxyUrl *url.URL) (string, e
 	return string(body), nil
 }
 
-func SendDingTalkNew(title, message, robotUrl, secret string, proxyUrl *url.URL) (string, error) {
+func SendDingTalkNew(title, message, robotUrl, secret string, markdown bool, proxyUrl *url.URL) (string, error) {
 	timestamp := fmt.Sprintf("%d000", time.Now().Unix())
 	sign := fmt.Sprintf("%s\n%s", timestamp, secret)
 	h := hmac.New(sha256.New, []byte(secret))
@@ -53,6 +58,11 @@ func SendDingTalkNew(title, message, robotUrl, secret string, proxyUrl *url.URL)
 	postUrl := fmt.Sprintf("%s&timestamp=%s&%s", robotUrl, timestamp, signUrlEncode)
 
 	requestBody := fmt.Sprintf(`{"msgtype": "text","text": {"content": "%s\n\n%s"}}`, title, message)
+	if markdown {
+		requestBody = fmt.Sprintf(
+			`{"msgtype": "markdown","markdown": {"title": "%s"", "text": "### %s\n\n%s"}}`, title, title, message,
+		)
+	}
 	jsonStr := []byte(requestBody)
 
 	req, _ := http.NewRequest("POST", postUrl, bytes.NewBuffer(jsonStr))
