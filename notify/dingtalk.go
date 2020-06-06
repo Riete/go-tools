@@ -8,13 +8,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
 )
 
-func SendDingTalk(title, message, robotUrl string, proxyUrl *url.URL) string {
+func SendDingTalk(title, message, robotUrl string, proxyUrl *url.URL) (string, error) {
 	requestBody := fmt.Sprintf(`{"msgtype": "text","text": {"content": "%s\n\n%s"}}`, title, message)
 	jsonStr := []byte(requestBody)
 
@@ -33,15 +32,14 @@ func SendDingTalk(title, message, robotUrl string, proxyUrl *url.URL) string {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println(string(body))
-	return string(body)
+	return string(body), nil
 }
 
-func SendDingTalkNew(title, message, robotUrl, secret string, proxyUrl *url.URL) string {
+func SendDingTalkNew(title, message, robotUrl, secret string, proxyUrl *url.URL) (string, error) {
 	timestamp := fmt.Sprintf("%d000", time.Now().Unix())
 	sign := fmt.Sprintf("%s\n%s", timestamp, secret)
 	h := hmac.New(sha256.New, []byte(secret))
@@ -72,10 +70,9 @@ func SendDingTalkNew(title, message, robotUrl, secret string, proxyUrl *url.URL)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println(string(body))
-	return string(body)
+	return string(body), nil
 }
