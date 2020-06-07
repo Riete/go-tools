@@ -17,7 +17,7 @@ func SendDingTalk(title, message, robotUrl string, markdown bool, proxyUrl *url.
 	requestBody := fmt.Sprintf(`{"msgtype": "text","text": {"content": "%s\n\n%s"}}`, title, message)
 	if markdown {
 		requestBody = fmt.Sprintf(
-			`{"msgtype": "markdown","markdown": {"title": "%s"", "text": "### %s\n\n%s"}}`, title, title, message,
+			`{"msgtype": "markdown","markdown": {"title": "%s", "text": "### %s\n\n%s"}}`, title, title, message,
 		)
 	}
 	jsonStr := []byte(requestBody)
@@ -60,7 +60,7 @@ func SendDingTalkNew(title, message, robotUrl, secret string, markdown bool, pro
 	requestBody := fmt.Sprintf(`{"msgtype": "text","text": {"content": "%s\n\n%s"}}`, title, message)
 	if markdown {
 		requestBody = fmt.Sprintf(
-			`{"msgtype": "markdown","markdown": {"title": "%s"", "text": "### %s\n\n%s"}}`, title, title, message,
+			`{"msgtype": "markdown","markdown": {"title": "%s", "text": "### %s\n\n%s"}}`, title, title, message,
 		)
 	}
 	jsonStr := []byte(requestBody)
