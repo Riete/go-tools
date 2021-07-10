@@ -56,6 +56,7 @@ func (h *Host) Cmd(cmd string) error {
 	if err := h.openSession(); err != nil {
 		return err
 	}
+	defer h.SSHClient.Close()
 	if err := h.SSHSession.Run(cmd); err != nil {
 		return errors.New(fmt.Sprintf("run %s failed, %s", cmd, err.Error()))
 	}
@@ -66,6 +67,7 @@ func (h *Host) CmdGet(cmd string) (string, error) {
 	if err := h.openSession(); err != nil {
 		return "", err
 	}
+	defer h.SSHClient.Close()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	h.SSHSession.Stderr = &stderr
@@ -77,7 +79,38 @@ func (h *Host) CmdGet(cmd string) (string, error) {
 	}
 }
 
-func (h *Host) OpenSftp() error {
+type FileTransfer struct {
+	Local  string
+	Remote string
+}
+
+func (h *Host) Put(ft []FileTransfer) error {
+	if err := h.openSftp(); err != nil {
+		return err
+	}
+	defer h.SSHClient.Close()
+	for _, v := range ft {
+		if err := h.put(v.Local, v.Remote); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h *Host) Get(ft []FileTransfer) error {
+	if err := h.openSftp(); err != nil {
+		return err
+	}
+	defer h.SSHClient.Close()
+	for _, v := range ft {
+		if err := h.get(v.Local, v.Remote); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h *Host) openSftp() error {
 	if err := h.connect(); err != nil {
 		return err
 	}
@@ -89,38 +122,38 @@ func (h *Host) OpenSftp() error {
 	return nil
 }
 
-func (h *Host) Put(local, remote string) (int64, error) {
+func (h *Host) put(local, remote string) error {
 	localFile, err := os.Open(local)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Open local file %s failed: %s", local, err.Error()))
+		return errors.New(fmt.Sprintf("Open local file %s failed: %s", local, err.Error()))
 	}
 	filename := path.Base(local)
 	remotePath := path.Join(remote, filename)
 	remoteFile, err := h.SFTPClient.Create(remotePath)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("[%s]: Create remote file %s failed: %s", h.Hostname, remotePath, err.Error()))
+		return errors.New(fmt.Sprintf("[%s]: Create remote file %s failed: %s", h.Hostname, remotePath, err.Error()))
 	}
-	size, err := io.Copy(remoteFile, localFile)
+	_, err = io.Copy(remoteFile, localFile)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("[%s]: Upload file to %s failed: %s", h.Hostname, remotePath, err.Error()))
+		return errors.New(fmt.Sprintf("[%s]: Upload file to %s failed: %s", h.Hostname, remotePath, err.Error()))
 	}
-	return size, nil
+	return nil
 }
 
-func (h *Host) Get(local, remote string) (int64, error) {
+func (h *Host) get(local, remote string) error {
 	filename := path.Base(remote)
 	localPath := path.Join(local, filename)
 	localFile, err := os.Create(localPath)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Create local file %s failed: %s", localPath, err.Error()))
+		return errors.New(fmt.Sprintf("Create local file %s failed: %s", localPath, err.Error()))
 	}
 	remoteFile, err := h.SFTPClient.Open(remote)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Open remote file %s failed: %s", remote, err.Error()))
+		return errors.New(fmt.Sprintf("Open remote file %s failed: %s", remote, err.Error()))
 	}
-	size, err := io.Copy(localFile, remoteFile)
+	_, err = io.Copy(localFile, remoteFile)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("[%s]: Download file to %s failed: %s", h.Hostname, localPath, err.Error()))
+		return errors.New(fmt.Sprintf("[%s]: Download file to %s failed: %s", h.Hostname, localPath, err.Error()))
 	}
-	return size, nil
+	return nil
 }
