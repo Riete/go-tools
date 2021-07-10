@@ -79,31 +79,36 @@ func (h *Host) CmdGet(cmd string) (string, error) {
 	}
 }
 
-type FileTransfer struct {
-	Local  string
-	Remote string
+type FilePut struct {
+	LocalFile string
+	RemoteDir string
 }
 
-func (h *Host) Put(ft []FileTransfer) error {
+func (h *Host) Put(ft []FilePut) error {
 	if err := h.openSftp(); err != nil {
 		return err
 	}
 	defer h.SSHClient.Close()
 	for _, v := range ft {
-		if err := h.put(v.Local, v.Remote); err != nil {
+		if err := h.put(v.LocalFile, v.RemoteDir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (h *Host) Get(ft []FileTransfer) error {
+type FileGet struct {
+	LocalDir   string
+	RemoteFile string
+}
+
+func (h *Host) Get(ft []FileGet) error {
 	if err := h.openSftp(); err != nil {
 		return err
 	}
 	defer h.SSHClient.Close()
 	for _, v := range ft {
-		if err := h.get(v.Local, v.Remote); err != nil {
+		if err := h.get(v.LocalDir, v.RemoteFile); err != nil {
 			return err
 		}
 	}
